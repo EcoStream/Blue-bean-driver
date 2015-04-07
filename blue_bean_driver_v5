@@ -1,0 +1,68 @@
+char DATA_DELIMITER = '%';
+int SAMPLES = 5;
+unsigned long time;
+unsigned long sleep;
+const char * beanName;
+AccelerationReading accel;
+int output;
+float data[] = {0, 0, 0, 0, 0};
+float sum = 0;
+float mean;
+float variance;
+String dataString;
+
+void setup(){
+  Serial.begin();
+  Bean.setAccelerationRange(2);
+  beanName = Bean.getBeanName();
+  output = 0;
+}
+
+
+void loop(){
+
+  if(output > 99) {
+    output = 0;
+  }
+  
+  sum = 0;
+  for(int i=0; i<SAMPLES; i++){
+    accel = Bean.getAcceleration();
+    data[i] = sqrt(pow(accel.xAxis, 2) + pow(accel.yAxis, 2) + pow(accel.zAxis, 2));
+    sum += data[i];
+  }
+  
+  mean = sum/float(SAMPLES);
+  
+  variance = 0;
+  for(int i=0; i<SAMPLES; i++) {
+    variance += pow((mean - data[i]),2)/float(SAMPLES);
+  }
+
+
+  //dataString = String(int(variance))+"."+String(getDecimal(variance))+",";
+  //dataString += beanName;
+   
+  //Serial.println(dataString);
+  
+  if(variance > 500){
+    output++;
+  }
+  
+  //dataString = String(output, DEC) + "," + beanName + "\n";
+  dataString = String(int(variance)) + "," + beanName + "\n";
+  //dataString = String(DATA_DELIMITER) + String(output, DEC) + String(DATA_DELIMITER) + "\n";
+  Serial.println(dataString); 
+
+  Bean.sleep(1000); 
+}
+
+long getDecimal(float val)
+{
+ int intPart = int(val);
+ long decPart = 1000*(val-intPart); //I am multiplying by 1000 assuming that the foat values will have a maximum of 3 decimal places
+                                   //Change to match the number of decimal places you need
+ if(decPart>0)return(decPart);           //return the decimal part of float number if it is available 
+ else if(decPart<0)return((-1)*decPart); //if negative, multiply by -1
+ else if(decPart=0)return(00);           //return 0 if decimal part of float number is not available
+}
